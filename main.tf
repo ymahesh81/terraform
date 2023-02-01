@@ -1,18 +1,27 @@
 terraform {
   //required_version = "3.18"
-  required_providers{
+  required_providers {
     aws = {
-        source = "hashicorp/aws"
-        version = "~> 3.0"
+      source  = "hashicorp/aws"
+      version = "~> 3.0"
+
     }
   }
 }
+provider "aws" {
+  region  = "ap-south-1"
+  profile = "mahesh"
+}
 
 resource "aws_instance" "ec2_demo" {
-   ami = data.aws_ami.amzn_linux.id
+  ami = data.aws_ami.amzn_linux.id
   //ami = "ami-0b5eea76982371e91"
-  instance_type = "t2.micro"
-  key_name = var.instance_keypair
+  instance_type          = var.instance_type
+  key_name               = var.instance_keypair
+  vpc_security_group_ids = [aws_security_group.Allow_SSH.id, aws_security_group.Allow_HTTP.id]
+  tags = {
+    Name = "ec2_demo"
+  }
 }
 
 # resource "aws_security_group" "ssh_sg" {
