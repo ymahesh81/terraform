@@ -16,13 +16,14 @@ output "ec2_public_dns" {
 
 ##output in maplist
 
-output "ec2_public_ip" {
-  description = "EC2 private IP"
-  //value = {for c,  instance in aws_instance.ec2_demo: c => instance.public_ip}
-  value = toset([for ec2_demo in aws_instance.ec2_demo : ec2_demo.public_ip])
+# output "ec2_public_ip" {
+#   description = "EC2 private IP"
+#   //value = {for c,  instance in aws_instance.ec2_demo: c => instance.public_ip}
+#   value = toset([for ec2_demo in aws_instance.ec2_demo : ec2_demo.public_ip])
+# }
+
+// output with splash operator
+output "splat_dns_name" {
+  value = aws_instance.ec2_demo[*].public_dns
 }
 
-# // output with splash operator
-# output "splat_dns_name" {
-#   value = aws_instance.ec2_demo[*].public_dns
-# }

@@ -21,6 +21,8 @@ data "aws_availability_zones" "ec2demo_azones" {
   }
 }
 
+
+
 resource "aws_instance" "ec2_demo" {
   ami = data.aws_ami.amzn_linux.id
   //ami = "ami-0b5eea76982371e91"
