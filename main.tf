@@ -21,7 +21,21 @@ data "aws_availability_zones" "ec2demo_azones" {
   }
 }
 
+data "aws_ec2_instance_type_offerings" "instype_avail" {
+    for_each = toset(data.aws_availability_zones.ec2demo_azones.names)
+  filter {
+    name   = "instance-type"
+    values = ["t2.small"]
+  }
 
+  filter {
+    name   = "location"
+    values = [each.key]
+    
+  }
+
+  location_type = "availability-zone"
+}
 
 resource "aws_instance" "ec2_demo" {
   ami = data.aws_ami.amzn_linux.id
@@ -31,7 +45,8 @@ resource "aws_instance" "ec2_demo" {
   instance_type          = var.instance_type_map["qa"]
   key_name               = var.instance_keypair
   vpc_security_group_ids = [aws_security_group.Allow_SSH.id, aws_security_group.Allow_HTTP.id]
-  for_each               = toset(data.aws_availability_zones.ec2demo_azones.names)
+  #for_each               = toset(data.aws_availability_zones.ec2demo_azones.names)
+  for_each = toset(keys({for az , details in data.aws_ec2_instance_type_offerings.instype_avail: az => details.instance_types if length(details.instance_types) !=0 }))
   availability_zone      = each.value
   tags = {
     Name = "ec2_demo-${each.key}"
