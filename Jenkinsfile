@@ -22,7 +22,9 @@ pipeline {
         }
         stage('validate') {
             steps {
+                withAWS(credentials: 'awstflab', region: 'ap-south-1'){
                 sh 'terraform validate -no-color'
+                }
             }
         }
         stage('plan') {
@@ -30,7 +32,9 @@ pipeline {
                 expression { params.action == 'plan' || params.action == 'apply' }
             }
             steps {
+                 withAWS(credentials: 'awstflab', region: 'ap-south-1'){
                 sh 'terraform plan -no-color -input=false -out=tfplan'
+                 }
             }
         }
         stage('approval') {
@@ -38,7 +42,10 @@ pipeline {
                 expression { params.action == 'apply'}
             }
             steps {
+                 withAWS(credentials: 'awstflab', region: 'ap-south-1')
+                 {
                 sh 'terraform show -no-color tfplan > tfplan.txt'
+                 }
                 script {
                     def plan = readFile 'tfplan.txt'
                     input message: "Apply the plan?",
@@ -51,7 +58,9 @@ pipeline {
                 expression { params.action == 'apply' }
             }
             steps {
+                 withAWS(credentials: 'awstflab', region: 'ap-south-1'){
                 sh 'terraform apply -no-color -input=false tfplan'
+                 }
             }
         }
         stage('show') {
@@ -59,7 +68,9 @@ pipeline {
                 expression { params.action == 'show' }
             }
             steps {
+                 withAWS(credentials: 'awstflab', region: 'ap-south-1'){
                 sh 'terraform show -no-color'
+                 }
             }
         }
         stage('preview-destroy') {
@@ -67,8 +78,10 @@ pipeline {
                 expression { params.action == 'preview-destroy' || params.action == 'destroy'}
             }
             steps {
+                 withAWS(credentials: 'awstflab', region: 'ap-south-1'){
                 sh 'terraform plan -no-color -destroy -out=tfplan '
                 sh 'terraform show -no-color tfplan > tfplan.txt'
+                 }
             }
         }
         stage('destroy') {
@@ -81,7 +94,9 @@ pipeline {
                     input message: "Delete the stack?",
                     parameters: [text(name: 'Plan', description: 'Please review the plan', defaultValue: plan)]
                 }
+                 withAWS(credentials: 'awstflab', region: 'ap-south-1'){
                 sh 'terraform destroy -no-color -force '
+                 }
             }
         }
     }
