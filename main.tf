@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 provider "aws" {
   region                   = "us-east-1"
   profile = "frescoplay"
@@ -85,3 +86,42 @@ output "teraform_aws_role_arn_output" {
 output "teraform_logging_arn_output" {
  value = aws_iam_policy.iam_policy_for_lambda.arn
 }
+=======
+terraform {
+  //required_version = "3.18"
+  required_providers{
+    aws = {
+        source = "hashicorp/aws"
+        version = "~> 3.0"
+    }
+  }
+}
+
+resource "aws_instance" "ec2_demo" {
+   ami = data.aws_ami.amzn_linux.id
+  //ami = "ami-0b5eea76982371e91"
+  instance_type = "t2.micro"
+  key_name = var.instance_keypair
+}
+
+# resource "aws_security_group" "ssh_sg" {
+
+# ingress = [ {
+#   cidr_blocks = [ "0.0.0.0/0" ]
+#   description = "SSH_SG"
+#   from_port = 22
+#   protocol = "tcp"
+#   self = false
+#   to_port = 22
+# } ]
+# egress = [ {
+#   cidr_blocks = [ "0.0.0.0/0" ]
+#   description = "SSH_SG"
+#   from_port = 0
+#   protocol = "-1"
+#   self = false
+#   to_port = 0
+#   ipv6_cidr_blocks = ["::/0"]
+# } ]
+# }
+>>>>>>> 1ae3388df792c024d56f8cf4adb4bad7837d614d
