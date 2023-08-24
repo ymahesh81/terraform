@@ -95,7 +95,7 @@ pipeline {
                     parameters: [text(name: 'Plan', description: 'Please review the plan', defaultValue: plan)]
                 }
                  withAWS(credentials: 'awstflab', region: 'ap-south-1'){
-                sh 'terraform destroy -no-color -force '
+                sh 'terraform plan -destroy -out  tfplan.txt'
                  }
             }
         }
