@@ -63,8 +63,10 @@ pipeline{
                        }
                 }
                 steps{
-                    
+                    withAWS(credentials: 'awstflab', region: 'ap-south-1')
+                    {
                     sh"terraform apply -auto-approve tfplan"
+                    }
                     
                     }
 
@@ -75,8 +77,9 @@ pipeline{
                        }
                 }
                 steps{
-                    
+                    withAWS(credentials: 'awstflab', region: 'ap-south-1'){
                     sh"terraform destroy -auto-approve"
+                    }
                     
                     }
 
