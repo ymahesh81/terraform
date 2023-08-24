@@ -27,11 +27,13 @@ pipeline{
 
             stage('init'){
                 steps{
+                    withAWS(credentials: 'awstflab', region: 'ap-south-1')
                     sh"terraform init"
                 }
             }
             stage('Validate'){
                 steps{
+                    withAWS(credentials: 'awstflab', region: 'ap-south-1')
                     sh"terraform validate"
                 }
             }
@@ -45,7 +47,7 @@ pipeline{
                        }
                 }
                 steps{
-                    
+                    withAWS(credentials: 'awstflab', region: 'ap-south-1')
                     sh"terraform plan -out=tfplan"
                     
                     }
