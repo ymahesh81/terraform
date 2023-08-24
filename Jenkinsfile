@@ -1,96 +1,90 @@
-pipeline{
-    agent any
+pipeline {
+    agent any 
+
     environment {
-        TF_VAR_region = 'ap-south-1'
+        AWS_ACCESS_KEY_ID = credentials('DEV_AWS_ACCESS_KEY_ID')
+        AWS_SECRET_ACCESS_KEY = credentials('DEV_AWS_SECRET_ACCESS_KEY')
     }
-        parameters{
-            choice(
-                choices:['plan','apply','destroy'],
-                name:'Actions',
-                description: 'Describes the Actions')
-            booleanParam(
-                defaultValue: false,
-                description: 'plan',
-                name: 'Planning'
-                )
-            booleanParam(
-                defaultValue: false,
-                description: 'apply',
-                name: 'Apply')
-            booleanParam(
-                defaultValue: false,
-                description: 'destroy',
-                name: 'Destroy')
-        }
+    parameters {
+        choice(
+            choices: ['plan', 'apply', 'show', 'preview-destroy', 'destroy'],
+            description: 'Terraform action to apply',
+            name: 'action')
+
+        string(defaultValue: "ap-south-1", description: 'aws region', name: 'AWS_REGION')
         
-        stages{
-
-            stage('init'){
-                steps{
-                    withAWS(credentials: 'awstflab', region: 'ap-south-1')
-                    {
-                    sh"terraform init"
-                    }
+    }
+    stages {
+        stage('init') {
+            steps {
+                withAWS(credentials: 'awstflab', region: 'ap-south-1')
+                 {
+                    sh 'terraform init -no-color'
                 }
             }
-            stage('Validate'){
-                steps{
-                    withAWS(credentials: 'awstflab', region: 'ap-south-1')
-                    {
-                    sh"terraform validate"
-                    }
+        }
+        stage('validate') {
+            steps {
+                sh 'terraform validate -no-color'
+            }
+        }
+        stage('plan') {
+            when {
+                expression { params.action == 'plan' || params.action == 'apply' }
+            }
+            steps {
+                sh 'terraform plan -no-color -input=false -out=tfplan'
+            }
+        }
+        stage('approval') {
+            when {
+                expression { params.action == 'apply'}
+            }
+            steps {
+                sh 'terraform show -no-color tfplan > tfplan.txt'
+                script {
+                    def plan = readFile 'tfplan.txt'
+                    input message: "Apply the plan?",
+                    parameters: [text(name: 'Plan', description: 'Please review the plan', defaultValue: plan)]
                 }
             }
-
-            stage('action'){
-
-                stages{
-                    stage('Plan'){
-                         when {
-                       expression{params.plan == true
-                       }
-                }
-                steps{
-                    withAWS(credentials: 'awstflab', region: 'ap-south-1')
-                    sh"terraform plan -out=tfplan"
-                    
-                    }
-
-                }
-                stage('Apply'){
-                         when {
-                       expression{params.apply == true
-                       }
-                }
-                steps{
-                    withAWS(credentials: 'awstflab', region: 'ap-south-1')
-                    {
-                    sh"terraform apply -auto-approve tfplan"
-                    }
-                    
-                    }
-
-                }
-                stage('Destroy'){
-                         when {
-                       expression{params.destroy == true
-                       }
-                }
-                steps{
-                    withAWS(credentials: 'awstflab', region: 'ap-south-1'){
-                    sh"terraform destroy -auto-approve"
-                    }
-                    
-                    }
-
-                  }              
-              }
-               
+        }
+        stage('apply') {
+            when {
+                expression { params.action == 'apply' }
             }
-            stage('Terraform Completed'){
-                steps{
-                    echo "Terraform Done..!"
-                    
+            steps {
+                sh 'terraform apply -no-color -input=false tfplan'
+            }
+        }
+        stage('show') {
+            when {
+                expression { params.action == 'show' }
+            }
+            steps {
+                sh 'terraform show -no-color'
+            }
+        }
+        stage('preview-destroy') {
+            when {
+                expression { params.action == 'preview-destroy' || params.action == 'destroy'}
+            }
+            steps {
+                sh 'terraform plan -no-color -destroy -out=tfplan '
+                sh 'terraform show -no-color tfplan > tfplan.txt'
+            }
+        }
+        stage('destroy') {
+            when {
+                expression { params.action == 'destroy' }
+            }
+            steps {
+                script {
+                    def plan = readFile 'tfplan.txt'
+                    input message: "Delete the stack?",
+                    parameters: [text(name: 'Plan', description: 'Please review the plan', defaultValue: plan)]
+                }
+                sh 'terraform destroy -no-color -force '
             }
         }
     }
