@@ -1,6 +1,6 @@
 provider "aws" {
-  region                   = "us-east-1"
-  profile = "fresoplay"
+  region                   = "ap-south-1"
+  profile = "mahesh"
   
 }
 
